@@ -302,7 +302,11 @@ func parseValue(kind FieldKind, s string) (int, string, string) {
 		return v, "", ""
 	}
 	if isQuartzToken(up) {
-		return 0, fmt.Sprintf("%q is a Quartz/AWS extension (L/W); this is not supported by standard cron", s), ""
+		hint := ""
+		if kind == DayOfMonth && strings.HasPrefix(up, "L") {
+			hint = `for the last day of the month use 28-31 and test it in the command: [ "$(date -d tomorrow +\%d)" = 01 ] && cmd`
+		}
+		return 0, fmt.Sprintf("%q is a Quartz/AWS extension (L/W); this is not supported by standard cron", s), hint
 	}
 	switch kind {
 	case Month:

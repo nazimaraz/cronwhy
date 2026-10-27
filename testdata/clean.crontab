@@ -1,0 +1,14 @@
+# Every job is explicit about its time zone, PATH and output.
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+MAILTO=ops@example.com
+CRON_TZ=Europe/Istanbul
+
+# m    h     dom mon dow  command
+7      2     *   *   *    /opt/app/bin/backup >> /var/log/backup.log 2>&1
+23     *     *   *   *    /opt/app/bin/sync-metrics >> /var/log/metrics.log 2>&1
+*/15   9-17  *   *   1-5  /opt/app/bin/poll-queue >> /var/log/poll.log 2>&1
+41     3     1   *   *    /opt/app/bin/monthly-report >> /var/log/report.log 2>&1
+12     4     *   *   SUN  /opt/app/bin/weekly-vacuum >> /var/log/vacuum.log 2>&1
+@reboot                   /opt/app/bin/warm-cache >> /var/log/warm.log 2>&1
+33     1     *   *   *    /usr/bin/find /tmp/app -mtime +7 -delete

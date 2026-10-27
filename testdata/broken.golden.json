@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "file": "testdata/broken.crontab",
+  "summary": {
+    "errors": 4,
+    "warnings": 9,
+    "info": 3,
+    "jobs": 15
+  },
+  "findings": [
+    {
+      "rule": "pile-up",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 6,
+      "message": "7 jobs start in the same minute at 00:00 (lines 6, 7, 8, 9, 10, 20, 21); this happens 7 time(s) in the 7d window; the top of the hour (especially midnight) is the busiest minute on most systems",
+      "fix": "stagger the start minutes (e.g. 3, 17, 34, 48) or add a random delay such as: sleep $((RANDOM \\% 300)); cmd",
+      "source": "0 0 * * * /opt/app/bin/rotate-logs >> /var/log/rotate.log 2>&1"
+    },
+    {
+      "rule": "dst-risk",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 10,
+      "message": "in America/New_York when DST starts clocks jump from 02:00 to 03:00, so runs at 02:00 may be skipped; when DST ends clocks go back from 02:00 to 01:00, so runs at 01:00 may happen twice (behaviour depends on the cron implementation)",
+      "fix": "schedule the job outside the transition window (e.g. 03:30 or later) or set CRON_TZ=UTC for it",
+      "source": "0 * * * * /opt/app/bin/sync-metrics >> /var/log/metrics.log 2>&1"
+    },
+    {
+      "rule": "unescaped-percent",
+      "severity": "error",
+      "file": "testdata/broken.crontab",
+      "line": 13,
+      "message": "3 unescaped % in the command; cron turns the first one into a newline and sends the rest to stdin, so the shell only runs: /usr/bin/pg_dump app > /backups/app-$(date +",
+      "fix": "escape it: /usr/bin/pg_dump app > /backups/app-$(date +\\%Y-\\%m-\\%d).sql",
+      "source": "30 2 * * * /usr/bin/pg_dump app > /backups/app-$(date +%Y-%m-%d).sql"
+    },
+    {
+      "rule": "dst-risk",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 13,
+      "message": "in America/New_York when DST starts clocks jump from 02:00 to 03:00, so runs at 02:30 may be skipped (behaviour depends on the cron implementation)",
+      "fix": "schedule the job outside the transition window (e.g. 03:30 or later) or set CRON_TZ=UTC for it",
+      "source": "30 2 * * * /usr/bin/pg_dump app > /backups/app-$(date +%Y-%m-%d).sql"
+    },
+    {
+      "rule": "impossible-date",
+      "severity": "error",
+      "file": "testdata/broken.crontab",
+      "line": 14,
+      "message": "schedule \"0 0 31 2 *\" can never fire: no selected month has the selected day-of-month",
+      "fix": "pick a day that exists in the selected months (February has at most 29 days; April, June, September and November have 30)",
+      "source": "0 0 31 2 * /opt/app/bin/leap-report >> /var/log/leap.log 2>&1"
+    },
+    {
+      "rule": "dom-dow-or",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 17,
+      "message": "day-of-month \"1-7\" and day-of-week \"MON\" are both restricted, so cron runs the job when EITHER matches (on day-of-month 1-7 and also on every day-of-week MON), not only when both match",
+      "fix": "to require both, set day-of-week to * and test the weekday in the command, e.g. [ \"$(date +\\%u)\" = 1 ] && cmd",
+      "source": "0 8 1-7 * MON /opt/app/bin/monthly-report >> /var/log/report.log 2>&1"
+    },
+    {
+      "rule": "dst-risk",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 20,
+      "message": "in America/New_York when DST starts clocks jump from 02:00 to 03:00, so runs at 02:00 ... 02:56 (9 runs) may be skipped; when DST ends clocks go back from 02:00 to 01:00, so runs at 01:00 ... 01:56 (9 runs) may happen twice (behaviour depends on the cron implementation)",
+      "fix": "schedule the job outside the transition window (e.g. 03:30 or later) or set CRON_TZ=UTC for it",
+      "source": "*/7 * * * * /opt/app/bin/poll-queue >> /var/log/poll.log 2>&1"
+    },
+    {
+      "rule": "uneven-step",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 20,
+      "message": "*/7 in the minute field fires at 0,7,14,21,28,35,42,49,56; after 56 it wraps to 0, a gap of 4 minute(s) instead of 7",
+      "fix": "use a step that divides 60 evenly (*/2, */3, */4, */5, */6, */10, */12, */15, */20, */30) or list the exact values",
+      "source": "*/7 * * * * /opt/app/bin/poll-queue >> /var/log/poll.log 2>&1"
+    },
+    {
+      "rule": "dst-risk",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 21,
+      "message": "in America/New_York when DST starts clocks jump from 02:00 to 03:00, so runs at 02:00 ... 02:59 (60 runs) may be skipped; when DST ends clocks go back from 02:00 to 01:00, so runs at 01:00 ... 01:59 (60 runs) may happen twice (behaviour depends on the cron implementation)",
+      "fix": "schedule the job outside the transition window (e.g. 03:30 or later) or set CRON_TZ=UTC for it",
+      "source": "* * * * * /opt/app/bin/heartbeat >> /var/log/heartbeat.log 2>&1"
+    },
+    {
+      "rule": "every-minute",
+      "severity": "info",
+      "file": "testdata/broken.crontab",
+      "line": 21,
+      "message": "job runs every minute (up to 1440 times a day)",
+      "fix": "if this is intended, make sure the job finishes well within a minute (or use flock); otherwise pick a specific minute or a step like */5",
+      "source": "* * * * * /opt/app/bin/heartbeat >> /var/log/heartbeat.log 2>&1"
+    },
+    {
+      "rule": "invalid-field",
+      "severity": "error",
+      "file": "testdata/broken.crontab",
+      "line": 24,
+      "message": "hour field \"25\": value 25 out of range 0-23",
+      "fix": "valid ranges: minute 0-59, hour 0-23, day-of-month 1-31, month 1-12 or JAN-DEC, day-of-week 0-7 or SUN-SAT",
+      "source": "0 25 * * * /opt/app/bin/legacy-cleanup >> /var/log/legacy.log 2>&1"
+    },
+    {
+      "rule": "relative-path",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 25,
+      "message": "\"python3\" is not an absolute path and PATH is not set; cron's default PATH is usually only /usr/bin:/bin",
+      "fix": "use the full path (find it with: command -v python3) or add PATH=/usr/local/bin:/usr/bin:/bin at the top of the crontab",
+      "source": "15 4 * * 1-5 python3 /opt/app/scripts/export.py >> /var/log/export.log 2>&1"
+    },
+    {
+      "rule": "no-output-handling",
+      "severity": "info",
+      "file": "testdata/broken.crontab",
+      "line": 26,
+      "message": "output is not redirected and MAILTO is not set; cron mails it to the local user, where it piles up unread or is lost if no MTA is installed",
+      "fix": "append \">> /var/log/job.log 2>&1\", or set MAILTO=you@example.com (MAILTO=\"\" to discard output)",
+      "source": "45 5 * * * /opt/app/bin/send-digest"
+    },
+    {
+      "rule": "duplicate-job",
+      "severity": "warning",
+      "file": "testdata/broken.crontab",
+      "line": 27,
+      "message": "same schedule and command as line 26; the job runs twice every time",
+      "fix": "remove one of the two lines",
+      "source": "45 5 * * * /opt/app/bin/send-digest"
+    },
+    {
+      "rule": "no-output-handling",
+      "severity": "info",
+      "file": "testdata/broken.crontab",
+      "line": 27,
+      "message": "output is not redirected and MAILTO is not set; cron mails it to the local user, where it piles up unread or is lost if no MTA is installed",
+      "fix": "append \">> /var/log/job.log 2>&1\", or set MAILTO=you@example.com (MAILTO=\"\" to discard output)",
+      "source": "45 5 * * * /opt/app/bin/send-digest"
+    },
+    {
+      "rule": "invalid-field",
+      "severity": "error",
+      "file": "testdata/broken.crontab",
+      "line": 28,
+      "message": "day-of-month field \"L\": \"L\" is a Quartz/AWS extension (L/W); this is not supported by standard cron",
+      "fix": "for the last day of the month use 28-31 and test it in the command: [ \"$(date -d tomorrow +\\%d)\" = 01 ] && cmd",
+      "source": "0 0 L * * /opt/app/bin/month-end >> /var/log/month-end.log 2>&1"
+    }
+  ]
+}

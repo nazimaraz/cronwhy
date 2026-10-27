@@ -31,7 +31,7 @@ func TestDSTRiskMessage(t *testing.T) {
 	if len(fs) != 1 {
 		t.Fatalf("findings = %+v", fs)
 	}
-	for _, want := range []string{"from 02:00 to 03:00", "02:00 run may be skipped", "from 02:00 to 01:00", "01:00 run may happen twice"} {
+	for _, want := range []string{"from 02:00 to 03:00", "runs at 02:00 may be skipped", "from 02:00 to 01:00", "runs at 01:00 may happen twice"} {
 		if !strings.Contains(fs[0].Message, want) {
 			t.Errorf("message %q lacks %q", fs[0].Message, want)
 		}

@@ -74,31 +74,40 @@ func (r dstRisk) Check(ctx *Context) []Finding {
 			trs = transitions(loc, ctx.From)
 			cache[loc] = trs
 		}
-		var parts []string
-		seen := map[bool]bool{}
+		// parts[0] is the spring (skip) message, parts[1] the autumn one.
+		var parts [2]string
 		for _, tr := range trs {
-			if seen[tr.spring] {
+			i := 1
+			if tr.spring {
+				i = 0
+			}
+			if parts[i] != "" {
 				continue
 			}
 			hits := windowHits(e, tr)
 			if len(hits) == 0 {
 				continue
 			}
-			seen[tr.spring] = true
 			if tr.spring {
-				parts = append(parts, fmt.Sprintf("when DST starts clocks jump from %s to %s, so the %s run may be skipped",
-					tr.from, tr.to, summarizeTimes(hits)))
+				parts[0] = fmt.Sprintf("when DST starts clocks jump from %s to %s, so runs at %s may be skipped",
+					tr.from, tr.to, summarizeTimes(hits))
 			} else {
-				parts = append(parts, fmt.Sprintf("when DST ends clocks go back from %s to %s, so the %s run may happen twice",
-					tr.from, tr.to, summarizeTimes(hits)))
+				parts[1] = fmt.Sprintf("when DST ends clocks go back from %s to %s, so runs at %s may happen twice",
+					tr.from, tr.to, summarizeTimes(hits))
 			}
 		}
-		if len(parts) == 0 {
+		msgs := make([]string, 0, 2)
+		for _, s := range parts {
+			if s != "" {
+				msgs = append(msgs, s)
+			}
+		}
+		if len(msgs) == 0 {
 			continue
 		}
 		out = append(out, r.finding(e.Line,
 			"schedule the job outside the transition window (e.g. 03:30 or later) or set CRON_TZ=UTC for it",
-			"in %s %s (behaviour depends on the cron implementation)", loc, strings.Join(parts, "; ")))
+			"in %s %s (behaviour depends on the cron implementation)", loc, strings.Join(msgs, "; ")))
 	}
 	return out
 }

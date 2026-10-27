@@ -1,0 +1,28 @@
+# Production crontab for app01. Inherited; nobody remembers who wrote it.
+SHELL=/bin/bash
+CRON_TZ=America/New_York
+
+# Nightly maintenance: everything at midnight
+0 0 * * * /opt/app/bin/rotate-logs >> /var/log/rotate.log 2>&1
+0 0 * * * /opt/app/bin/vacuum-db >> /var/log/vacuum.log 2>&1
+@daily /opt/app/bin/purge-sessions >> /var/log/purge.log 2>&1
+@midnight /opt/app/bin/rebuild-index >> /var/log/index.log 2>&1
+0 * * * * /opt/app/bin/sync-metrics >> /var/log/metrics.log 2>&1
+
+# Backups
+30 2 * * * /usr/bin/pg_dump app > /backups/app-$(date +%Y-%m-%d).sql
+0 0 31 2 * /opt/app/bin/leap-report >> /var/log/leap.log 2>&1
+
+# Monthly report: "first Monday of the month"
+0 8 1-7 * MON /opt/app/bin/monthly-report >> /var/log/report.log 2>&1
+
+# Polling
+*/7 * * * * /opt/app/bin/poll-queue >> /var/log/poll.log 2>&1
+* * * * * /opt/app/bin/heartbeat >> /var/log/heartbeat.log 2>&1
+
+# Legacy
+0 25 * * * /opt/app/bin/legacy-cleanup >> /var/log/legacy.log 2>&1
+15 4 * * 1-5 python3 /opt/app/scripts/export.py >> /var/log/export.log 2>&1
+45 5 * * * /opt/app/bin/send-digest
+45 5 * * * /opt/app/bin/send-digest
+0 0 L * * /opt/app/bin/month-end >> /var/log/month-end.log 2>&1
