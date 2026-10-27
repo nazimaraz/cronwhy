@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/cronexpr"
-	"github.com/your-username/cronwhy/internal/explain"
+	"github.com/nazimaraz/cronwhy/internal/cronexpr"
+	"github.com/nazimaraz/cronwhy/internal/explain"
 )
 
 func cmdExplain(args []string, e *env, timesOnly bool) int {

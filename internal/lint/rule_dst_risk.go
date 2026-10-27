@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/cronexpr"
-	"github.com/your-username/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/cronexpr"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
 )
 
 func init() {

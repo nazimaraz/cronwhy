@@ -1,6 +1,6 @@
 package lint
 
-import "github.com/your-username/cronwhy/internal/cronexpr"
+import "github.com/nazimaraz/cronwhy/internal/cronexpr"
 
 func init() {
 	register(domDowOr{meta{"dom-dow-or", Warning,

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/your-username/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
 )
 
 func TestPileUp(t *testing.T) {

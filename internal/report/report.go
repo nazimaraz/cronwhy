@@ -7,8 +7,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/your-username/cronwhy/internal/crontab"
-	"github.com/your-username/cronwhy/internal/lint"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/lint"
 )
 
 // SchemaVersion is the version of the JSON output schema.

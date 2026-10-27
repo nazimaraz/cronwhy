@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
 )
 
 func TestDSTRisk(t *testing.T) {

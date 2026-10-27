@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
 )
 
 // Severity of a finding.

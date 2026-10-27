@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/your-username/cronwhy/internal/lint"
+	"github.com/nazimaraz/cronwhy/internal/lint"
 )
 
 var update = flag.Bool("update", false, "rewrite golden files")

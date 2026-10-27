@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/crontab"
-	"github.com/your-username/cronwhy/internal/lint"
-	"github.com/your-username/cronwhy/internal/report"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/lint"
+	"github.com/nazimaraz/cronwhy/internal/report"
 )
 
 func cmdLint(args []string, e *env) int {

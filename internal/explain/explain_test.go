@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/cronexpr"
+	"github.com/nazimaraz/cronwhy/internal/cronexpr"
 )
 
 func TestDescribe(t *testing.T) {

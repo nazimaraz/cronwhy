@@ -1,3 +1,3 @@
-module github.com/your-username/cronwhy
+module github.com/nazimaraz/cronwhy
 
 go 1.22

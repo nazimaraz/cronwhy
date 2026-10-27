@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/your-username/cronwhy/internal/cronexpr"
+	"github.com/nazimaraz/cronwhy/internal/cronexpr"
 )
 
 const sample = `# comment

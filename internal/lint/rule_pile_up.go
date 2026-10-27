@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
 )
 
 func init() {

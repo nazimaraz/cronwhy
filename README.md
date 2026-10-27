@@ -1,7 +1,7 @@
 # cronwhy
 
-[![CI](https://github.com/your-username/cronwhy/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/cronwhy/actions/workflows/ci.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/your-username/cronwhy.svg)](https://pkg.go.dev/github.com/your-username/cronwhy)
+[![CI](https://github.com/nazimaraz/cronwhy/actions/workflows/ci.yml/badge.svg)](https://github.com/nazimaraz/cronwhy/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/nazimaraz/cronwhy.svg)](https://pkg.go.dev/github.com/nazimaraz/cronwhy)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Explain cron expressions and lint whole crontab files.**
@@ -21,13 +21,13 @@ change. `cronwhy` reads the whole file and finds these problems.
 ## Install
 
 ```sh
-go install github.com/your-username/cronwhy/cmd/cronwhy@latest
+go install github.com/nazimaraz/cronwhy/cmd/cronwhy@latest
 ```
 
 Or from source:
 
 ```sh
-git clone https://github.com/your-username/cronwhy && cd cronwhy && make build
+git clone https://github.com/nazimaraz/cronwhy && cd cronwhy && make build
 ```
 
 ## Usage
@@ -261,7 +261,7 @@ otherwise the system's local zone.
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/your-username/cronwhy
+  - repo: https://github.com/nazimaraz/cronwhy
     rev: v0.1.0
     hooks:
       - id: cronwhy
@@ -284,7 +284,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - run: go install github.com/your-username/cronwhy/cmd/cronwhy@latest
+      - run: go install github.com/nazimaraz/cronwhy/cmd/cronwhy@latest
       - run: cronwhy lint --strict deploy/crontab
 ```
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/your-username/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
 )
 
 func init() {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-username/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
 )
 
 var testFrom = time.Date(2026, 10, 27, 0, 0, 0, 0, time.UTC)

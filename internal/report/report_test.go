@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/your-username/cronwhy/internal/crontab"
-	"github.com/your-username/cronwhy/internal/lint"
+	"github.com/nazimaraz/cronwhy/internal/crontab"
+	"github.com/nazimaraz/cronwhy/internal/lint"
 )
 
 func sampleFile(t *testing.T) (*crontab.File, []lint.Finding) {
