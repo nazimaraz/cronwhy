@@ -26,7 +26,7 @@ const usage = `cronwhy explains cron expressions and lints crontab files.
 Usage:
   cronwhy explain "<expr>" [-n 10] [--from "2026-10-27 20:00"] [--tz Europe/Istanbul]
   cronwhy next "<expr>" [-n 10] [--from ...] [--tz ...]
-  cronwhy lint [file | -] [--system] [--format text|json] [--strict] [--tz ...] [--window 7d]
+  cronwhy lint [file... | -] [--system] [--format text|json] [--strict] [--tz ...] [--window 7d]
   cronwhy version
 
 Run "cronwhy <command> -h" for command flags.

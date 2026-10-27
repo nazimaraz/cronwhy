@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "file": "testdata/broken.crontab",
   "summary": {
+    "files": 1,
+    "jobs": 15,
     "errors": 4,
     "warnings": 9,
-    "info": 3,
-    "jobs": 15
+    "info": 3
   },
   "findings": [
     {

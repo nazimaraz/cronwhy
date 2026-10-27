@@ -16,7 +16,7 @@ import (
 )
 
 func cmdLint(args []string, e *env) int {
-	fs := newFlagSet("lint", e, "cronwhy lint [file | -] [flags]")
+	fs := newFlagSet("lint", e, "cronwhy lint [file... | -] [flags]")
 	system := fs.Bool("system", false, "parse /etc/crontab and /etc/cron.d format (sixth field is the user)")
 	format := fs.String("format", "text", "output format: text or json")
 	strict := fs.Bool("strict", false, "exit 1 when only warnings or info findings are present")
@@ -27,10 +27,6 @@ func cmdLint(args []string, e *env) int {
 	pos, err := parseInterspersed(fs, args)
 	if err != nil {
 		return flagExit(err)
-	}
-	if len(pos) > 1 {
-		fmt.Fprintln(e.stderr, "cronwhy: lint takes at most one file")
-		return exitUsage
 	}
 	if *format != "text" && *format != "json" {
 		fmt.Fprintf(e.stderr, "cronwhy: unknown --format %q (want text or json)\n", *format)
@@ -56,49 +52,57 @@ func cmdLint(args []string, e *env) int {
 		return exitUsage
 	}
 
-	name, data, err := readInput(pos, e)
-	if err != nil {
-		fmt.Fprintln(e.stderr, "cronwhy:", err)
-		return exitUsage
+	inputs := pos
+	if len(inputs) == 0 {
+		inputs = []string{""} // crontab -l
 	}
-	file, err := crontab.Parse(bytes.NewReader(data), name, crontab.Options{System: *system})
-	if err != nil {
-		fmt.Fprintln(e.stderr, "cronwhy:", err)
-		return exitUsage
+	cfg := lint.Config{Location: loc, From: start, Window: win, PileUpThreshold: *pileUp}
+	var results []report.Result
+	for _, in := range inputs {
+		name, data, err := readInput(in, e)
+		if err != nil {
+			fmt.Fprintln(e.stderr, "cronwhy:", err)
+			return exitUsage
+		}
+		file, err := crontab.Parse(bytes.NewReader(data), name, crontab.Options{System: *system})
+		if err != nil {
+			fmt.Fprintln(e.stderr, "cronwhy:", err)
+			return exitUsage
+		}
+		results = append(results, report.Result{File: file, Findings: lint.Run(file, cfg)})
 	}
 
-	cfg := lint.Config{Location: loc, From: start, Window: win, PileUpThreshold: *pileUp}
-	findings := lint.Run(file, cfg)
 	if *format == "json" {
-		if err := report.JSON(e.stdout, file, findings); err != nil {
+		if err := report.JSON(e.stdout, results); err != nil {
 			fmt.Fprintln(e.stderr, "cronwhy:", err)
 			return exitUsage
 		}
 	} else {
-		report.Text(e.stdout, file, findings, report.UseColor(e.isTTY, e.getenv("NO_COLOR")))
+		report.Text(e.stdout, results, report.UseColor(e.isTTY, e.getenv("NO_COLOR")))
 	}
 
-	sum := report.Summarize(file, findings)
+	sum := report.Summarize(results)
 	switch {
 	case sum.Errors > 0:
 		return exitErrors
-	case *strict && len(findings) > 0:
+	case *strict && sum.Warnings+sum.Info > 0:
 		return exitWarnings
 	}
 	return exitOK
 }
 
-func readInput(pos []string, e *env) (name string, data []byte, err error) {
-	switch {
-	case len(pos) == 0:
+// readInput reads a file, stdin ("-") or the user's crontab ("").
+func readInput(path string, e *env) (name string, data []byte, err error) {
+	switch path {
+	case "":
 		data, err = e.crontabL()
 		return "crontab -l", data, err
-	case pos[0] == "-":
+	case "-":
 		data, err = io.ReadAll(e.stdin)
 		return "<stdin>", data, err
 	}
-	data, err = os.ReadFile(pos[0])
-	return pos[0], data, err
+	data, err = os.ReadFile(path)
+	return path, data, err
 }
 
 func readUserCrontab() ([]byte, error) {

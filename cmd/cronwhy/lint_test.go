@@ -102,7 +102,7 @@ func TestLintExitCodes(t *testing.T) {
 		{"missing file", []string{"lint", "testdata/nope.crontab"}, "", exitUsage, "no such file"},
 		{"bad format", []string{"lint", "--format", "xml", "testdata/clean.crontab"}, "", exitUsage, "unknown --format"},
 		{"bad window", []string{"lint", "--window", "7w", "testdata/clean.crontab"}, "", exitUsage, "invalid --window"},
-		{"two files", []string{"lint", "a", "b"}, "", exitUsage, "at most one file"},
+		{"two files", []string{"lint", "testdata/clean.crontab", "testdata/broken.crontab"}, "", exitErrors, "2 files: 4 errors"},
 		{"bad flag", []string{"lint", "--bogus"}, "", exitUsage, "flag provided but not defined"},
 	}
 	for _, tt := range tests {

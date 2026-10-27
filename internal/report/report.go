@@ -49,25 +49,36 @@ func severityColor(s lint.Severity) string {
 	return ansiCyan
 }
 
+// Result is the lint outcome for one file.
+type Result struct {
+	File     *crontab.File
+	Findings []lint.Finding
+}
+
 // Summary counts findings by severity.
 type Summary struct {
+	Files    int `json:"files"`
+	Jobs     int `json:"jobs"`
 	Errors   int `json:"errors"`
 	Warnings int `json:"warnings"`
 	Info     int `json:"info"`
-	Jobs     int `json:"jobs"`
 }
 
-// Summarize counts findings by severity.
-func Summarize(f *crontab.File, findings []lint.Finding) Summary {
-	s := Summary{Jobs: len(f.Entries)}
-	for _, fd := range findings {
-		switch fd.Severity {
-		case lint.Error:
-			s.Errors++
-		case lint.Warning:
-			s.Warnings++
-		default:
-			s.Info++
+// Summarize counts files, jobs and findings by severity.
+func Summarize(results []Result) Summary {
+	var s Summary
+	for _, r := range results {
+		s.Files++
+		s.Jobs += len(r.File.Entries)
+		for _, fd := range r.Findings {
+			switch fd.Severity {
+			case lint.Error:
+				s.Errors++
+			case lint.Warning:
+				s.Warnings++
+			default:
+				s.Info++
+			}
 		}
 	}
 	return s
@@ -92,27 +103,38 @@ func plural(n int, word string) string {
 //	file:line: severity: message (rule-id)
 //	    source line
 //	    fix: suggestion
-func Text(w io.Writer, f *crontab.File, findings []lint.Finding, color bool) {
+func Text(w io.Writer, results []Result, color bool) {
 	p := painter(color)
-	for _, fd := range findings {
-		fmt.Fprintf(w, "%s %s %s %s\n",
-			p.paint(ansiBold, fmt.Sprintf("%s:%d:", f.Name, fd.Line)),
-			p.paint(severityColor(fd.Severity), fd.Severity.String()+":"),
-			fd.Message,
-			p.paint(ansiDim, "("+fd.Rule+")"))
-		if src := source(f, fd.Line); src != "" {
-			fmt.Fprintf(w, "    %s\n", src)
-		}
-		if fd.Fix != "" {
-			fmt.Fprintf(w, "    %s %s\n", p.paint(ansiGreen, "fix:"), fd.Fix)
+	total := 0
+	for _, r := range results {
+		total += len(r.Findings)
+		for _, fd := range r.Findings {
+			fmt.Fprintf(w, "%s %s %s %s\n",
+				p.paint(ansiBold, fmt.Sprintf("%s:%d:", r.File.Name, fd.Line)),
+				p.paint(severityColor(fd.Severity), fd.Severity.String()+":"),
+				fd.Message,
+				p.paint(ansiDim, "("+fd.Rule+")"))
+			if src := source(r.File, fd.Line); src != "" {
+				fmt.Fprintf(w, "    %s\n", src)
+			}
+			if fd.Fix != "" {
+				fmt.Fprintf(w, "    %s %s\n", p.paint(ansiGreen, "fix:"), fd.Fix)
+			}
 		}
 	}
-	s := Summarize(f, findings)
-	if len(findings) == 0 {
-		fmt.Fprintf(w, "%s %s: no problems found (%s checked)\n", p.paint(ansiGreen, "ok"), f.Name, plural(s.Jobs, "job"))
+	if total == 0 {
+		for _, r := range results {
+			fmt.Fprintf(w, "%s %s: no problems found (%s checked)\n",
+				p.paint(ansiGreen, "ok"), r.File.Name, plural(len(r.File.Entries), "job"))
+		}
 		return
 	}
-	fmt.Fprintf(w, "\n%s: %s, %s, %d info (%s checked)\n", f.Name,
+	s := Summarize(results)
+	label := plural(s.Files, "file")
+	if len(results) == 1 {
+		label = results[0].File.Name
+	}
+	fmt.Fprintf(w, "\n%s: %s, %s, %d info (%s checked)\n", label,
 		p.paint(ansiRed, plural(s.Errors, "error")), p.paint(ansiYellow, plural(s.Warnings, "warning")), s.Info, plural(s.Jobs, "job"))
 }
 
@@ -130,19 +152,20 @@ type JSONFinding struct {
 // JSONReport is the top-level JSON document.
 type JSONReport struct {
 	Version  int           `json:"version"`
-	File     string        `json:"file"`
 	Summary  Summary       `json:"summary"`
 	Findings []JSONFinding `json:"findings"`
 }
 
-// JSON writes findings as an indented JSON document.
-func JSON(w io.Writer, f *crontab.File, findings []lint.Finding) error {
-	rep := JSONReport{Version: SchemaVersion, File: f.Name, Summary: Summarize(f, findings), Findings: []JSONFinding{}}
-	for _, fd := range findings {
-		rep.Findings = append(rep.Findings, JSONFinding{
-			Rule: fd.Rule, Severity: fd.Severity, File: f.Name, Line: fd.Line,
-			Message: fd.Message, Fix: fd.Fix, Source: source(f, fd.Line),
-		})
+// JSON writes all findings as one indented JSON document.
+func JSON(w io.Writer, results []Result) error {
+	rep := JSONReport{Version: SchemaVersion, Summary: Summarize(results), Findings: []JSONFinding{}}
+	for _, r := range results {
+		for _, fd := range r.Findings {
+			rep.Findings = append(rep.Findings, JSONFinding{
+				Rule: fd.Rule, Severity: fd.Severity, File: r.File.Name, Line: fd.Line,
+				Message: fd.Message, Fix: fd.Fix, Source: source(r.File, fd.Line),
+			})
+		}
 	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")

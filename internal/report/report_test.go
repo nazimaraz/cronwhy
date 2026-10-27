@@ -24,7 +24,7 @@ func sampleFile(t *testing.T) (*crontab.File, []lint.Finding) {
 func TestText(t *testing.T) {
 	f, fs := sampleFile(t)
 	var b bytes.Buffer
-	Text(&b, f, fs, false)
+	Text(&b, []Result{{f, fs}}, false)
 	want := `jobs.cron:2: error: bad (invalid-field)
     0 3 * * * /bin/x
     fix: fix it
@@ -41,12 +41,12 @@ jobs.cron: 1 error, 0 warnings, 1 info (1 job checked)
 func TestTextColorAndClean(t *testing.T) {
 	f, fs := sampleFile(t)
 	var b bytes.Buffer
-	Text(&b, f, fs, true)
+	Text(&b, []Result{{f, fs}}, true)
 	if !strings.Contains(b.String(), "\x1b[31merror:\x1b[0m") {
 		t.Errorf("no color: %q", b.String())
 	}
 	b.Reset()
-	Text(&b, f, nil, false)
+	Text(&b, []Result{{f, nil}}, false)
 	if b.String() != "ok jobs.cron: no problems found (1 job checked)\n" {
 		t.Errorf("clean output = %q", b.String())
 	}
@@ -61,23 +61,34 @@ func TestUseColor(t *testing.T) {
 func TestJSON(t *testing.T) {
 	f, fs := sampleFile(t)
 	var b bytes.Buffer
-	if err := JSON(&b, f, fs); err != nil {
+	if err := JSON(&b, []Result{{f, fs}}); err != nil {
 		t.Fatal(err)
 	}
 	var rep map[string]any
 	if err := json.Unmarshal(b.Bytes(), &rep); err != nil {
 		t.Fatal(err)
 	}
-	if rep["version"].(float64) != 1 || rep["file"] != "jobs.cron" {
+	if rep["version"].(float64) != 1 || rep["summary"].(map[string]any)["errors"].(float64) != 1 {
 		t.Errorf("header = %v", rep)
 	}
 	first := rep["findings"].([]any)[0].(map[string]any)
-	if first["severity"] != "error" || first["line"].(float64) != 2 || first["source"] != "0 3 * * * /bin/x" {
+	if first["file"] != "jobs.cron" || first["severity"] != "error" || first["line"].(float64) != 2 || first["source"] != "0 3 * * * /bin/x" {
 		t.Errorf("finding = %v", first)
 	}
 	b.Reset()
-	_ = JSON(&b, f, nil)
+	_ = JSON(&b, []Result{{f, nil}})
 	if !strings.Contains(b.String(), `"findings": []`) {
 		t.Errorf("empty findings must be [], got %s", b.String())
+	}
+}
+
+func TestTextMultipleFiles(t *testing.T) {
+	f, fs := sampleFile(t)
+	g, _ := sampleFile(t)
+	g.Name = "other.cron"
+	var b bytes.Buffer
+	Text(&b, []Result{{f, fs}, {g, nil}}, false)
+	if !strings.HasSuffix(b.String(), "\n2 files: 1 error, 0 warnings, 1 info (2 jobs checked)\n") {
+		t.Errorf("got:\n%s", b.String())
 	}
 }
