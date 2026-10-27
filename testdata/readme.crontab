@@ -1,0 +1,3 @@
+MAILTO=ops@example.com
+0 3 * * * /usr/bin/tar czf /backups/home-$(date +%F).tgz /home
+*/7 * * * * /opt/app/bin/poll >> /var/log/poll.log 2>&1

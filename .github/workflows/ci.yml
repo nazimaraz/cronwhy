@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        go: ["1.22", "stable"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: gofmt and vet
+        run: make lint
+      - name: test
+        run: go test ./... -race
+      - name: fuzz (short)
+        run: go test ./internal/cronexpr -run='^$' -fuzz=FuzzParse -fuzztime=15s
+      - name: definition of done
+        run: |
+          make build
+          ./cronwhy explain "*/15 9-17 * * 1-5" -n 5
+          set +e
+          ./cronwhy lint testdata/broken.crontab > /dev/null; test $? -eq 2 || exit 1
+          ./cronwhy lint testdata/clean.crontab --strict || exit 1

@@ -1,0 +1,6 @@
+- id: cronwhy
+  name: cronwhy lint
+  description: Lint crontab files for common cron pitfalls.
+  entry: cronwhy lint
+  language: golang
+  files: '(^|/)crontab$|\.(cron|crontab)$'
